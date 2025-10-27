@@ -174,15 +174,12 @@
             overflow: hidden;
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s;
+            background: #fff; /* subtle background to avoid transparent gaps while images load */
         }
 
         .art-card:hover {
             transform: scale(1.02);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .art-card:hover .art-overlay {
-            opacity: 1;
         }
 
         .art-image {
@@ -193,20 +190,28 @@
             min-height: 200px;
         }
 
+        .art-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* overlay that only appears on hover */
         .art-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
-            padding: 2rem 1.5rem 1.5rem;
+            padding: 1rem 1rem 1.5rem;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.25s ease;
+            display: flex;
+            align-items: flex-end;
         }
 
-        .art-card:hover .artist-name {
+        .art-card:hover .art-overlay {
             opacity: 1;
-            transform: translateY(0);
         }
 
         .artist-name {
@@ -215,9 +220,6 @@
             font-size: 1.1rem;
             margin: 0;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s;
         }
 
         .upload-section {
@@ -406,23 +408,26 @@
     </div>
 
     <script>
-        const sampleArtworks = [
-            { title: "Sunset Dreams", artist: "Emma Rodriguez", price: 450, category: "Painting" },
-            { title: "Urban Reflections", artist: "James Chen", price: 680, category: "Photography" },
-            { title: "Abstract Emotions", artist: "Sarah Williams", price: 320, category: "Digital Art" },
-            { title: "Mountain Serenity", artist: "Michael Brown", price: 890, category: "Painting" },
-            { title: "Cyber Punk City", artist: "Alex Kim", price: 550, category: "Digital Art" },
-            { title: "Marble Waves", artist: "Sofia Martinez", price: 1200, category: "Sculpture" }
+        // Batch/infinite-scroll configuration
+        const BATCH_SIZE = 40;
+        const TOTAL_ARTWORKS = 500; // generate a large set of placeholder artworks
+        let currentIndex = 0;
+        let isLoading = false;
+
+        // sample artist names to pick from
+        const artistNames = [
+            "Emma Rodriguez", "James Chen", "Sarah Williams", "Michael Brown",
+            "Alex Kim", "Sofia Martinez", "Liam Johnson", "Olivia Davis",
+            "Noah Miller", "Ava Wilson", "William Moore", "Isabella Taylor"
         ];
 
-        const universities = [
-            { name: "Rhode Island School of Design", location: "Providence, RI" },
-            { name: "School of the Art Institute of Chicago", location: "Chicago, IL" },
-            { name: "California Institute of the Arts", location: "Valencia, CA" },
-            { name: "Yale School of Art", location: "New Haven, CT" },
-            { name: "Parsons School of Design", location: "New York, NY" },
-            { name: "Pratt Institute", location: "Brooklyn, NY" }
-        ];
+        // generate placeholder artworks using picsum.photos for images
+        const artworks = Array.from({ length: TOTAL_ARTWORKS }).map((_, i) => ({
+            id: i + 1,
+            artist: artistNames[i % artistNames.length],
+            // unique image per seed
+            image: `https://picsum.photos/seed/art-${i}/600/400`
+        }));
 
         function showTab(tabName) {
             document.querySelectorAll('.content-section').forEach(section => {
@@ -431,25 +436,86 @@
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
-            
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            if (event && event.target) event.target.classList.add('active');
         }
 
-        function loadArtworks() {
-            const gallery = document.getElementById('artGallery');
-            gallery.innerHTML = sampleArtworks.map(art => `
-                <div class="art-card">
-                    <div class="art-image"></div>
-                    <div class="art-info">
-                        <div class="art-title">${art.title}</div>
-                        <div class="artist-name">by ${art.artist}</div>
-                        <div class="art-price">$${art.price}</div>
-                        <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;">View Details</button>
-                    </div>
-                </div>
-            `).join('');
+        function createArtCard(art) {
+            const card = document.createElement('div');
+            card.className = 'art-card';
+
+            const imgWrap = document.createElement('div');
+            imgWrap.className = 'art-image';
+
+            const img = document.createElement('img');
+            img.loading = 'lazy';
+            img.alt = `Artwork by ${art.artist}`;
+            img.src = art.image;
+
+            imgWrap.appendChild(img);
+
+            // overlay only shows artist name on hover
+            const overlay = document.createElement('div');
+            overlay.className = 'art-overlay';
+            const artistName = document.createElement('div');
+            artistName.className = 'artist-name';
+            artistName.textContent = `by ${art.artist}`;
+            overlay.appendChild(artistName);
+
+            card.appendChild(imgWrap);
+            card.appendChild(overlay);
+
+            return card;
         }
+
+        function renderNextBatch() {
+            if (isLoading) return;
+            isLoading = true;
+            const gallery = document.getElementById('artGallery');
+            const fragment = document.createDocumentFragment();
+            const end = Math.min(currentIndex + BATCH_SIZE, artworks.length);
+
+            for (let i = currentIndex; i < end; i++) {
+                const card = createArtCard(artworks[i]);
+                fragment.appendChild(card);
+            }
+
+            gallery.appendChild(fragment);
+            currentIndex = end;
+            isLoading = false;
+        }
+
+        // load initial batch
+        function loadInitialBatches() {
+            // show initial 40
+            renderNextBatch();
+        }
+
+        // infinite scroll: load more when near bottom
+        function handleScroll() {
+            if ((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 1000)) {
+                if (currentIndex < artworks.length) {
+                    renderNextBatch();
+                }
+            }
+        }
+
+        // debounce scroll handler
+        let scrollTimeout = null;
+        window.addEventListener('scroll', function() {
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(handleScroll, 150);
+        });
+
+        // Universities list and upload handlers remain mostly the same
+        const universities = [
+            { name: "Rhode Island School of Design", location: "Providence, RI" },
+            { name: "School of the Art Institute of Chicago", location: "Chicago, IL" },
+            { name: "California Institute of the Arts", location: "Valencia, CA" },
+            { name: "Yale School of Art", location: "New Haven, CT" },
+            { name: "Parsons School of Design", location: "New York, NY" },
+            { name: "Pratt Institute", location: "Brooklyn, NY" }
+        ];
 
         function loadUniversities() {
             const list = document.getElementById('universityList');
