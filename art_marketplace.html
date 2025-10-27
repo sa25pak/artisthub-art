@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtistHub.art - Artist Marketplace & Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .hero {
+            text-align: center;
+            color: white;
+            padding: 4rem 0;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+
+        .search-bar {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            gap: 1rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin: 3rem 0 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab {
+            padding: 0.8rem 2rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .gallery {
+            columns: 4 280px;
+            column-gap: 1rem;
+        }
+
+        .art-card {
+            position: relative;
+            break-inside: avoid;
+            margin-bottom: 1rem;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .art-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .art-card:hover .art-overlay {
+            opacity: 1;
+        }
+
+        .art-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 200px;
+        }
+
+        .art-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+            padding: 2rem 1.5rem 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .art-card:hover .artist-name {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .artist-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-upload {
+            border: 3px dashed #667eea;
+            padding: 3rem;
+            text-align: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            background: #f5f7ff;
+        }
+
+        .portfolio-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .university-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .university-card {
+            border: 2px solid #e0e0e0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s;
+        }
+
+        .university-card:hover {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+
+        .university-card input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .university-info h3 {
+            margin-bottom: 0.3rem;
+        }
+
+        .university-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">🎨 ArtistHub.art</div>
+            <div class="nav-links">
+                <a href="#marketplace">Marketplace</a>
+                <a href="#artists">Artists</a>
+                <a href="#universities">Universities</a>
+                <button class="btn btn-primary" onclick="showTab('upload')">Upload Art</button>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Discover & Share Extraordinary Art</h1>
+            <p>Connect artists with collectors and universities worldwide</p>
+            <div class="search-bar">
+                <input type="text" placeholder="Search for art, artists, or styles...">
+                <button class="btn btn-primary">Search</button>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('marketplace')">Marketplace</button>
+            <button class="tab" onclick="showTab('upload')">Upload Art</button>
+            <button class="tab" onclick="showTab('portfolio')">Share Portfolio</button>
+        </div>
+
+        <div id="marketplace" class="content-section active">
+            <div class="gallery" id="artGallery"></div>
+        </div>
+
+        <div id="upload" class="content-section">
+            <div class="upload-section">
+                <h2 style="margin-bottom: 2rem;">Upload Your Artwork</h2>
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label>Artwork Image</label>
+                        <div class="file-upload" onclick="document.getElementById('fileInput').click()">
+                            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                            <p style="font-size: 3rem; margin-bottom: 1rem;">📁</p>
+                            <p>Click to upload or drag and drop</p>
+                            <p style="color: #666; margin-top: 0.5rem;">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                        <div id="previewContainer" style="margin-top: 1rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" placeholder="Enter artwork title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea rows="4" placeholder="Describe your artwork..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Price ($)</label>
+                        <input type="number" placeholder="0.00" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select required>
+                            <option value="">Select a category</option>
+                            <option>Painting</option>
+                            <option>Digital Art</option>
+                            <option>Photography</option>
+                            <option>Sculpture</option>
+                            <option>Mixed Media</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">Publish Artwork</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="portfolio" class="content-section">
+            <div class="portfolio-section">
+                <h2 style="margin-bottom: 1rem;">Share Your Portfolio with Universities</h2>
+                <p style="color: #666; margin-bottom: 2rem;">Select universities to share your complete portfolio and artwork for review</p>
+                
+                <div class="university-list" id="universityList"></div>
+                
+                <button class="btn btn-primary" style="margin-top: 2rem; padding: 1rem 2rem;" onclick="sharePortfolio()">Share Selected Portfolio</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sampleArtworks = [
+            { title: "Sunset Dreams", artist: "Emma Rodriguez", price: 450, category: "Painting" },
+            { title: "Urban Reflections", artist: "James Chen", price: 680, category: "Photography" },
+            { title: "Abstract Emotions", artist: "Sarah Williams", price: 320, category: "Digital Art" },
+            { title: "Mountain Serenity", artist: "Michael Brown", price: 890, category: "Painting" },
+            { title: "Cyber Punk City", artist: "Alex Kim", price: 550, category: "Digital Art" },
+            { title: "Marble Waves", artist: "Sofia Martinez", price: 1200, category: "Sculpture" }
+        ];
+
+        const universities = [
+            { name: "Rhode Island School of Design", location: "Providence, RI" },
+            { name: "School of the Art Institute of Chicago", location: "Chicago, IL" },
+            { name: "California Institute of the Arts", location: "Valencia, CA" },
+            { name: "Yale School of Art", location: "New Haven, CT" },
+            { name: "Parsons School of Design", location: "New York, NY" },
+            { name: "Pratt Institute", location: "Brooklyn, NY" }
+        ];
+
+        function showTab(tabName) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function loadArtworks() {
+            const gallery = document.getElementById('artGallery');
+            gallery.innerHTML = sampleArtworks.map(art => `
+                <div class="art-card">
+                    <div class="art-image"></div>
+                    <div class="art-info">
+                        <div class="art-title">${art.title}</div>
+                        <div class="artist-name">by ${art.artist}</div>
+                        <div class="art-price">$${art.price}</div>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;">View Details</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadUniversities() {
+            const list = document.getElementById('universityList');
+            list.innerHTML = universities.map((uni, index) => `
+                <div class="university-card">
+                    <input type="checkbox" id="uni${index}" value="${uni.name}">
+                    <div class="university-info">
+                        <h3>${uni.name}</h3>
+                        <p>${uni.location}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewContainer').innerHTML = `
+                        <img src="${e.target.result}" style="max-width: 100%; border-radius: 8px; margin-top: 1rem;">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function sharePortfolio() {
+            const selected = [];
+            universities.forEach((uni, index) => {
+                if (document.getElementById(`uni${index}`).checked) {
+                    selected.push(uni.name);
+                }
+            });
+            
+            if (selected.length > 0) {
+                alert(`Portfolio shared with:\n${selected.join('\n')}`);
+            } else {
+                alert('Please select at least one university');
+            }
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Artwork uploaded successfully!');
+            this.reset();
+            document.getElementById('previewContainer').innerHTML = '';
+        });
+
+        loadArtworks();
+        loadUniversities();
+    </script>
+</body>
+</html>
